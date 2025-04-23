@@ -48,7 +48,7 @@ jobs:
         id: set_tag
         run: |
           DATE="$(date +%d%m%Y)"
-          echo "tag=q3e-release-${DATE}" >> $GITHUB_OUTPUT
+          echo "tag=release-${DATE}" >> $GITHUB_OUTPUT
 
       - name: Prepare and pack AppDir
         run: |

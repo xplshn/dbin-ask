@@ -50,7 +50,7 @@ jobs:
           DATE="$(date +%d%m%Y)"
           echo "tag=q3e-release-${DATE}" >> $GITHUB_OUTPUT
 
-      - name: Engine Only
+      - name: Prepare and pack AppDir
         run: |
           cd "$GITHUB_WORKSPACE"
           NAME="dbin-ask"
@@ -67,9 +67,9 @@ jobs:
           echo '"$APPDIR/bin/dbin_ask" $@' >> "${APPBUNDLE_ID}.AppDir/AppRun"
           chmod +x "${APPBUNDLE_ID}.AppDir/AppRun"
 
-          cp ./io.github.ec_.Quake3e.png "${APPBUNDLE_ID}.AppDir/.DirIcon"
-          cp ./io.github.ec_.Quake3e.appdata.xml \
-             ./io.github.ec_.Quake3e.desktop \
+          cp ./dbin_logo.png "${APPBUNDLE_ID}.AppDir/.DirIcon"
+          cp ./dbin_mime.xml \
+             ./dbin_ask.desktop \
              "${APPBUNDLE_ID}.AppDir"
 
           wget -qO ./pelf "https://github.com/xplshn/pelf/releases/latest/download/pelf_$(uname -m)"

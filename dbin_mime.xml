@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="x-scheme-handler/dbin">
+    <comment>dbin:// protocol</comment>
+    <glob pattern="dbin:*"/>
+  </mime-type>
+</mime-info>

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=dbin://ask
+Exec=dbin_ask %u
+Type=Application
+MimeType=x-scheme-handler/dbin;
+Icon=application-x-executable
+Categories=Utility;

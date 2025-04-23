@@ -1,0 +1,112 @@
+name: Create and release AppBundle
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  schedule:
+    - cron: "0 10 * * 0"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: "Build dbin_ask and prepare AppBundle"
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:latest
+      options: "--privileged"
+    outputs:
+      release_tag: ${{ steps.set_tag.outputs.tag }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          apk add --no-cache sdl2-dev mesa-dev git \
+                   libxrandr-dev alsa-lib \
+                   curl curl-dev \
+                   build-base
+
+      - name: Build dbin_ask
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          apk add go gcc libxcursor-dev libxrandr-dev \
+                  mesa-dev libxkbcommon-dev wayland-dev \
+                  libxinerama-dev libxi-dev linux-headers \
+
+          export CGO_CFLAGS="-O2 -static-pie" \
+                 CGO_ENABLED=1
+
+          go build
+          strip --strip-all ./dbin_ask
+
+          echo "DATE=$(date +%d_%m_%Y)" >> $GITHUB_ENV
+
+      - name: Set release tag
+        id: set_tag
+        run: |
+          DATE="$(date +%d%m%Y)"
+          echo "tag=q3e-release-${DATE}" >> $GITHUB_OUTPUT
+
+      - name: Engine Only
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          NAME="dbin-ask"
+          MAINTAINER="xplshn"
+          APPBUNDLE_ID="${NAME}-${{ env.DATE }}-${MAINTAINER}"
+
+          mkdir -p "${APPBUNDLE_ID}.AppDir"
+          wget -qO ./sharun "https://github.com/VHSgunzo/sharun/releases/latest/download/sharun-$(uname -m)-aio"
+          chmod +x ./sharun
+          ./sharun l --dst-dir "${APPBUNDLE_ID}.AppDir" -g -w -s ./dbin_ask
+
+          echo '#!/bin/sh' > "${APPBUNDLE_ID}.AppDir/AppRun"
+          echo 'APPDIR="$(dirname "$(readlink -f "$0")")"' >> "${APPBUNDLE_ID}.AppDir/AppRun"
+          echo '"$APPDIR/bin/dbin_ask" $@' >> "${APPBUNDLE_ID}.AppDir/AppRun"
+          chmod +x "${APPBUNDLE_ID}.AppDir/AppRun"
+
+          cp ./io.github.ec_.Quake3e.png "${APPBUNDLE_ID}.AppDir/.DirIcon"
+          cp ./io.github.ec_.Quake3e.appdata.xml \
+             ./io.github.ec_.Quake3e.desktop \
+             "${APPBUNDLE_ID}.AppDir"
+
+          wget -qO ./pelf "https://github.com/xplshn/pelf/releases/latest/download/pelf_$(uname -m)"
+          chmod +x ./pelf
+          ./pelf --add-appdir "${APPBUNDLE_ID}.AppDir" \
+                 --output-to "${NAME}.dwfs.AppBundle" \
+                 --appbundle-id "${APPBUNDLE_ID}"
+
+      - name: List AppBundles
+        run: ls -lh *.AppBundle
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: appbundles
+          path: "*.AppBundle"
+          retention-days: 1
+
+  release:
+    name: "Create GitHub Release"
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: appbundles
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2.2.2
+        with:
+          name: "Build ${{ needs.build.outputs.release_tag || github.run_number }}"
+          tag_name: "${{ needs.build.outputs.release_tag || github.run_number }}"
+          prerelease: false
+          draft: false
+          generate_release_notes: false
+          make_latest: true
+          files: |
+            *.AppBundle

@@ -13,7 +13,7 @@ jobs:
     name: "Build dbin_ask and prepare AppBundle"
     runs-on: ubuntu-latest
     container:
-      image: alpine:latest
+      image: alpine:edge
       options: "--privileged"
     outputs:
       release_tag: ${{ steps.set_tag.outputs.tag }}

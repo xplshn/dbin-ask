@@ -36,10 +36,9 @@ jobs:
                   mesa-dev libxkbcommon-dev wayland-dev \
                   libxinerama-dev libxi-dev linux-headers \
 
-          export CGO_CFLAGS="-O2 -static-pie" \
-                 CGO_ENABLED=1
-
-          go build
+          env CGO_CFLAGS="-O2 -static-pie" \
+              CGO_ENABLED=1 \
+              go build --tags wayland
           strip --strip-all ./dbin_ask
 
           echo "DATE=$(date +%d_%m_%Y)" >> $GITHUB_ENV

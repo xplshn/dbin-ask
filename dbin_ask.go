@@ -407,7 +407,7 @@ func (ui *UI) CreateConfirmationScreen() {
 		nil,
 		buttons,
 		nil, nil,
-		container.NewScroll(mainContent), // Main content is scrollable as needed
+		container.NewScroll(mainContent),
 	)
 
 	ui.window.SetContent(content)
